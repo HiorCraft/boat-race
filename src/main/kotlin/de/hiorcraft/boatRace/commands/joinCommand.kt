@@ -1,24 +1,27 @@
 package de.hiorcraft.boatRace.commands
 
-
+import de.hiorcraft.boatRace.race.RaceManager
+import de.hiorcraft.boatRace.race.RaceState
 import dev.jorel.commandapi.kotlindsl.commandAPICommand
 import dev.jorel.commandapi.kotlindsl.playerExecutor
 
 
-fun joinCommand() = commandAPICommand("test") {
+fun joinCommand() = commandAPICommand("join") {
 
     playerExecutor { player, args ->
 
-        if (RaceManager.isInQueue(player)) {
-            player.sendMessage("§eDu bist bereits in der Queue.")
-            return@executesPlayer
-        }
-
         if (RaceManager.state != RaceState.WAITING) {
             player.sendMessage("§cDas Rennen läuft bereits!")
-            return@executesPlayer
+            return@playerExecutor
         }
 
+        // Schon drin?
+        if (RaceManager.isInQueue(player)) {
+            player.sendMessage("§eDu bist bereits in der Queue.")
+            return@playerExecutor
+        }
+
+        // Joinen
         RaceManager.join(player)
     }
 }

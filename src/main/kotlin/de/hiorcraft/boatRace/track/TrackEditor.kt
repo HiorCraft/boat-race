@@ -48,6 +48,14 @@ object TrackEditor {
         save()
     }
 
+    fun setStartPosition(id: String, loc: Location) {
+        val list = yml.getStringList("tracks.$id.startPositions")
+        list.clear()
+        list.add(serialize(loc))
+        yml.set("tracks.$id.startPositions", list)
+        save()
+    }
+
     fun setSpectator(id: String, loc: Location) {
         yml.set("tracks.$id.spectator", serialize(loc))
         save()

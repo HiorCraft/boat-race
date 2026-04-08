@@ -1,5 +1,6 @@
 package de.hiorcraft.boatRace.race
 
+import de.hiorcraft.boatRace.plugin
 import org.bukkit.Bukkit
 import org.bukkit.entity.Player
 import org.bukkit.scheduler.BukkitTask
@@ -12,7 +13,7 @@ object RaceTimer {
         val startTime = System.currentTimeMillis()
 
         val task = Bukkit.getScheduler().runTaskTimer(
-            IceRacePlugin.instance, Runnable {
+            plugin, Runnable {
                 val now = System.currentTimeMillis()
                 val diff = (now - startTime) / 1000.0
 

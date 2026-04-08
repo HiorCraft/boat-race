@@ -5,12 +5,12 @@ import dev.jorel.commandapi.kotlindsl.commandTree
 import dev.jorel.commandapi.kotlindsl.playerExecutor
 import dev.jorel.commandapi.kotlindsl.stringArgument
 
-fun setStartLineCommand() = commandTree("setstartline") {
+fun setFinishLineCommand() = commandTree("setfinishline") {
 
     stringArgument("map") {
         playerExecutor { player, args ->
             val map = args["map"] as String
-            TrackEditingListener.startEditingStartLine(player, map)
+            TrackEditingListener.startEditingFinishLine(player, map)
         }
     }
 }
