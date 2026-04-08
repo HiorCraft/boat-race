@@ -1,0 +1,11 @@
+# Countdown-Dauern in Sekunden
+# Ablauf: lobbyCountdown -> mapCountdown -> startCountdown (GO)
+lobbyCountdown: 10
+mapCountdown: 10
+startCountdown: 3
+
+# Globale Positionen (Format: world,x,y,z,yaw)
+# Setzen im Spiel mit: /setlobby und /setpodest
+locations:
+  lobby: ""
+  podiumBase: ""

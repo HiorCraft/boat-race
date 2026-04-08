@@ -9,7 +9,7 @@ import org.bukkit.entity.Firework
 fun finishRace() {
     val track = RaceManager.currentTrack ?: return
     val sorted = RaceManager.activePlayers.sortedBy { it.totalTime }
-    val lobbyBase = RaceManager.lobbyLocation ?: track.spectator
+    val lobbyBase = RaceManager.podiumBaseLocation ?: RaceManager.lobbyLocation ?: track.spectator
 
     val podium = listOf(
         lobbyBase.clone().add(0.0, 1.0, 0.0),

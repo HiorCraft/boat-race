@@ -4,6 +4,7 @@ import de.hiorcraft.boatRace.plugin
 import de.hiorcraft.boatRace.race.TrackManager
 import de.hiorcraft.boatRace.track.TrackEditor
 import de.hiorcraft.boatRace.util.DirectionHelper
+import de.hiorcraft.boatRace.util.getGridStartPositions
 import dev.jorel.commandapi.kotlindsl.integerArgument
 import dev.jorel.commandapi.kotlindsl.commandTree
 import dev.jorel.commandapi.kotlindsl.playerExecutor
@@ -84,7 +85,9 @@ private fun showPreview(player: org.bukkit.entity.Player, map: String, seconds: 
     previewBoats.forEach { if (it.isValid) it.remove() }
     previewBoats.clear()
 
-    for (pos in track.startPositions) {
+    val previewPositions = track.getGridStartPositions(maxOf(8, track.startPositions.size))
+
+    for (pos in previewPositions) {
         val world = pos.world ?: continue
         val spawn = pos.block.location.add(0.5, 0.0, 0.5)
         spawn.yaw = pos.yaw
@@ -102,4 +105,3 @@ private fun showPreview(player: org.bukkit.entity.Player, map: String, seconds: 
         previewBoats.clear()
     }, seconds * 20L)
 }
-

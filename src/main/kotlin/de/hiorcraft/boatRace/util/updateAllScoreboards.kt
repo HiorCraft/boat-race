@@ -12,10 +12,35 @@ import org.bukkit.scheduler.BukkitRunnable
 object RaceCountdown {
 
     fun startCountdown(onStart: () -> Unit) {
-        var count = 3
+        startCountdown(3, "§7Start in", "§a§lGO!", "", onStart)
+    }
+
+    fun startLobbyAndMapCountdown(
+        lobbySeconds: Int = 10,
+        mapSeconds: Int = 10,
+        startSeconds: Int = 3,
+        onMapTeleport: () -> Unit,
+        onStart: () -> Unit
+    ) {
+        startCountdown(lobbySeconds, "§7Map-Teleport in", "§bTeleport", "§7Ab zur Strecke") {
+            onMapTeleport()
+            startCountdown(mapSeconds, "§7Rennen startet in", "§eBereit?", "§7Boot-Start folgt") {
+                startCountdown(startSeconds, "§7Start in", "§a§lGO!", "", onStart)
+            }
+        }
+    }
+
+    private fun startCountdown(
+        seconds: Int,
+        subtitlePrefix: String,
+        doneTitle: String,
+        doneSubtitle: String,
+        onDone: () -> Unit
+    ) {
+        var count = seconds.coerceAtLeast(1)
 
         for (player in RaceManager.activePlayers) {
-            player.player.sendTitle("§e$count", "", 0, 20, 0)
+            player.player.sendTitle("§e$count", "$subtitlePrefix §e${count}s", 0, 20, 0)
         }
 
         object : BukkitRunnable() {
@@ -24,16 +49,16 @@ object RaceCountdown {
 
                 if (count > 0) {
                     for (player in RaceManager.activePlayers) {
-                        player.player.sendTitle("§e$count", "", 0, 20, 0)
+                        player.player.sendTitle("§e$count", "$subtitlePrefix §e${count}s", 0, 20, 0)
                         player.player.playSound(player.player.location, org.bukkit.Sound.BLOCK_NOTE_BLOCK_PLING, 1f, 1f)
                     }
-                } else if (count == 0) {
+                } else {
                     for (player in RaceManager.activePlayers) {
-                        player.player.sendTitle("§a§lGO!", "", 0, 20, 10)
+                        player.player.sendTitle(doneTitle, doneSubtitle, 0, 20, 10)
                         player.player.playSound(player.player.location, org.bukkit.Sound.BLOCK_DISPENSER_DISPENSE, 1f, 1f)
                     }
                     cancel()
-                    onStart()
+                    onDone()
                 }
             }
         }.runTaskTimer(plugin, 0L, 20L)
@@ -55,18 +80,14 @@ object BoatSpawner {
         clearSpawnedBoats()
 
         for ((index, racePlayer) in RaceManager.activePlayers.withIndex()) {
-            val baseLoc = track.startPositions.getOrElse(index) { track.startPositions.last() }
+            val baseLoc = track.getGridStartPosition(index) ?: continue
             val world = baseLoc.world ?: continue
 
             if (!world.isChunkLoaded(baseLoc.blockX shr 4, baseLoc.blockZ shr 4)) {
                 world.loadChunk(baseLoc.blockX shr 4, baseLoc.blockZ shr 4)
             }
 
-            val spawnLoc = if (index == 0) {
-                baseLoc.block.location.add(0.5, 0.0, 0.5)
-            } else {
-                baseLoc.clone().add(0.5, 0.2, 0.5)
-            }
+            val spawnLoc = baseLoc.block.location.add(0.5, 0.0, 0.5)
             spawnLoc.yaw = baseLoc.yaw
             spawnLoc.pitch = 0f
             val player = racePlayer.player

@@ -35,11 +35,20 @@ object TrackEditor {
     }
 
     fun setLobby(loc: Location) {
-        yml.set("lobby", serialize(loc))
-        save()
+        plugin.config.set("locations.lobby", serialize(loc))
+        plugin.saveConfig()
+        TrackManager.load(plugin)
     }
 
-    fun getLobby(): Location? = parse(yml.getString("lobby"))
+    fun getLobby(): Location? = parse(plugin.config.getString("locations.lobby"))
+
+    fun setPodiumBase(loc: Location) {
+        plugin.config.set("locations.podiumBase", serialize(loc))
+        plugin.saveConfig()
+        TrackManager.load(plugin)
+    }
+
+    fun getPodiumBase(): Location? = parse(plugin.config.getString("locations.podiumBase"))
 
     fun setStartLine(id: String, a: Location, b: Location) {
         setLapLine(id, a, b)

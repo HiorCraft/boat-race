@@ -2,9 +2,9 @@ package de.hiorcraft.boatRace.race
 
 import de.hiorcraft.boatRace.plugin
 import de.hiorcraft.boatRace.util.BoatSpawner
+import de.hiorcraft.boatRace.util.ChatConfig
 import de.hiorcraft.boatRace.util.FinishLineVisualizer
 import de.hiorcraft.boatRace.util.RaceScoreboard
-import de.hiorcraft.boatRace.race.RaceTimer
 import org.bukkit.Bukkit
 import org.bukkit.GameMode
 import org.bukkit.Location
@@ -20,28 +20,29 @@ object RaceManager {
     var currentTrack: RaceTrack? = null
     var totalRounds = 3
     var lobbyLocation: Location? = null
+    var podiumBaseLocation: Location? = null
 
     fun isInQueue(player: Player): Boolean = queue.contains(player)
 
     fun join(player: Player): Boolean {
         if (state != RaceState.WAITING) {
-            player.sendMessage("§cDas Rennen läuft bereits!")
+            player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.ERROR}Das Rennen läuft bereits!")
             return false
         }
 
         if (queue.contains(player)) {
-            player.sendMessage("§eDu bist bereits in der Queue.")
+            player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.WARNING}Du bist bereits in der Queue.")
             return false
         }
 
         queue.add(player)
-        player.sendMessage("§aDu bist der Queue beigetreten! (${queue.size} Spieler)")
+        player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.SUCCESS}Du bist der Queue beigetreten! (${queue.size} Spieler)")
         return true
     }
 
     fun leave(player: Player) {
         queue.remove(player)
-        player.sendMessage("§cDu hast die Queue verlassen.")
+        player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.ERROR}Du hast die Queue verlassen.")
     }
 
     fun leaveActiveRace(player: Player): Boolean {
@@ -81,7 +82,7 @@ object RaceManager {
     }
 
     fun finishPlayer(racePlayer: RacePlayer) {
-        racePlayer.player.sendMessage("§a§lDu hast das Rennen beendet!")
+        racePlayer.player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.SUCCESS}Du hast das Rennen beendet!")
 
         val vehicle = racePlayer.player.vehicle
         if (vehicle != null) {
@@ -143,7 +144,9 @@ object TrackManager {
         if (!file.exists()) plugin.saveResource("tracks.yml", false)
 
         val yml = YamlConfiguration.loadConfiguration(file)
-        RaceManager.lobbyLocation = parseLoc(yml.getString("lobby"))
+        RaceManager.lobbyLocation = parseLoc(plugin.config.getString("locations.lobby"))
+            ?: parseLoc(yml.getString("lobby"))
+        RaceManager.podiumBaseLocation = parseLoc(plugin.config.getString("locations.podiumBase"))
         tracks.clear()
         val section = yml.getConfigurationSection("tracks") ?: return
 

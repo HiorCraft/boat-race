@@ -15,6 +15,7 @@ import de.hiorcraft.boatRace.commands.previewBoatsCommand
 import de.hiorcraft.boatRace.commands.lobbyCommand
 import de.hiorcraft.boatRace.commands.setLapLineCommand
 import de.hiorcraft.boatRace.commands.setLobbyCommand
+import de.hiorcraft.boatRace.commands.setPodestCommand
 import de.hiorcraft.boatRace.commands.setSpectatorCommand
 import de.hiorcraft.boatRace.commands.stopGameCommand
 import de.hiorcraft.boatRace.commands.startGameCommand
@@ -44,6 +45,7 @@ class PaperMain : JavaPlugin() {
         logger.info("\n$LOGO")
         logger.info("Boat-Race is Starting!")
 
+        saveDefaultConfig()
         TrackManager.load(this)
 
         // Register commands
@@ -55,6 +57,7 @@ class PaperMain : JavaPlugin() {
         addStartPosCommand()
         setLobbyCommand()
         lobbyCommand()
+        setPodestCommand()
         startGameCommand()
         stopGameCommand()
         joinCommand()
