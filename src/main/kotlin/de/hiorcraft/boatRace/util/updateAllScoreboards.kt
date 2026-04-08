@@ -2,12 +2,14 @@ package de.hiorcraft.boatRace.util
 
 import de.hiorcraft.boatRace.plugin
 import de.hiorcraft.boatRace.race.RaceManager
+import de.hiorcraft.boatRace.race.RacePlayer
 import org.bukkit.Location
 import org.bukkit.Particle
 import org.bukkit.entity.Boat
 import org.bukkit.entity.EntityType
 import org.bukkit.scheduler.BukkitTask
 import org.bukkit.scheduler.BukkitRunnable
+import java.util.UUID
 
 object RaceCountdown {
 
@@ -68,9 +70,12 @@ object RaceCountdown {
 object BoatSpawner {
 
     private val spawnedRaceBoats = mutableListOf<Boat>()
+    private val boatsByPlayer = mutableMapOf<UUID, Boat>()
 
     fun clearSpawnedBoats() {
+        boatsByPlayer.values.forEach { if (it.isValid) it.remove() }
         spawnedRaceBoats.forEach { if (it.isValid) it.remove() }
+        boatsByPlayer.clear()
         spawnedRaceBoats.clear()
     }
 
@@ -81,29 +86,45 @@ object BoatSpawner {
 
         for ((index, racePlayer) in RaceManager.activePlayers.withIndex()) {
             val baseLoc = track.getGridStartPosition(index) ?: continue
-            val world = baseLoc.world ?: continue
-
-            if (!world.isChunkLoaded(baseLoc.blockX shr 4, baseLoc.blockZ shr 4)) {
-                world.loadChunk(baseLoc.blockX shr 4, baseLoc.blockZ shr 4)
+            val spawnLoc = baseLoc.block.location.add(0.5, 0.0, 0.5).apply {
+                yaw = baseLoc.yaw
+                pitch = 0f
             }
+            spawnBoatFor(racePlayer, spawnLoc)
+        }
+    }
 
-            val spawnLoc = baseLoc.block.location.add(0.5, 0.0, 0.5)
-            spawnLoc.yaw = baseLoc.yaw
-            spawnLoc.pitch = 0f
-            val player = racePlayer.player
+    fun respawnBoatFor(racePlayer: RacePlayer, at: Location? = null) {
+        val player = racePlayer.player
+        val base = (at ?: player.location).clone().apply { pitch = 0f }
+        if (player.isInsideVehicle) {
+            player.leaveVehicle()
+        }
+        spawnBoatFor(racePlayer, base.add(0.0, 0.1, 0.0))
+    }
 
-            if (player.isInsideVehicle) {
-                player.leaveVehicle()
-            }
+    private fun spawnBoatFor(racePlayer: RacePlayer, spawnLoc: Location) {
+        val world = spawnLoc.world ?: return
 
-            player.teleport(spawnLoc)
+        if (!world.isChunkLoaded(spawnLoc.blockX shr 4, spawnLoc.blockZ shr 4)) {
+            world.loadChunk(spawnLoc.blockX shr 4, spawnLoc.blockZ shr 4)
+        }
 
-            val boat = world.spawnEntity(spawnLoc, EntityType.OAK_BOAT) as Boat
-            spawnedRaceBoats.add(boat)
-            if (!boat.addPassenger(player)) {
-                player.teleport(boat.location)
-                boat.addPassenger(player)
-            }
+        val player = racePlayer.player
+        boatsByPlayer.remove(player.uniqueId)?.let {
+            if (it.isValid) it.remove()
+            spawnedRaceBoats.remove(it)
+        }
+
+        player.teleport(spawnLoc)
+
+        val boat = world.spawnEntity(spawnLoc, EntityType.OAK_BOAT) as Boat
+        spawnedRaceBoats.add(boat)
+        boatsByPlayer[player.uniqueId] = boat
+
+        if (!boat.addPassenger(player)) {
+            player.teleport(boat.location)
+            boat.addPassenger(player)
         }
     }
 }

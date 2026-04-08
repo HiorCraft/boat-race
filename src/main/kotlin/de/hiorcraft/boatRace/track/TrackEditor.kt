@@ -9,7 +9,12 @@ import java.io.File
 object TrackEditor {
 
     private val file = File(plugin.dataFolder, "tracks.yml")
-    private val yml = YamlConfiguration.loadConfiguration(file)
+    private var yml = YamlConfiguration.loadConfiguration(file)
+
+    fun reload() {
+        yml = YamlConfiguration.loadConfiguration(file)
+        TrackManager.load(plugin)
+    }
 
     fun createMap(id: String): Boolean {
         val base = "tracks.$id"

@@ -6,6 +6,7 @@ import de.hiorcraft.boatRace.Listener.LobbyJoinListener
 import de.hiorcraft.boatRace.Listener.PlayerMoveListener
 import de.hiorcraft.boatRace.Listener.TrackEditingListener
 import de.hiorcraft.boatRace.commands.addStartPosCommand
+import de.hiorcraft.boatRace.commands.boatRaceCommand
 import de.hiorcraft.boatRace.commands.createMapCommand
 import de.hiorcraft.boatRace.commands.deleteTrackCommand
 import de.hiorcraft.boatRace.commands.joinCommand
@@ -19,6 +20,7 @@ import de.hiorcraft.boatRace.commands.setPodestCommand
 import de.hiorcraft.boatRace.commands.setSpectatorCommand
 import de.hiorcraft.boatRace.commands.stopGameCommand
 import de.hiorcraft.boatRace.commands.startGameCommand
+import de.hiorcraft.boatRace.commands.validateTrackCommand
 import de.hiorcraft.boatRace.race.TrackManager
 
 import org.bukkit.plugin.java.JavaPlugin
@@ -58,6 +60,8 @@ class PaperMain : JavaPlugin() {
         setLobbyCommand()
         lobbyCommand()
         setPodestCommand()
+        boatRaceCommand()
+        validateTrackCommand()
         startGameCommand()
         stopGameCommand()
         joinCommand()
