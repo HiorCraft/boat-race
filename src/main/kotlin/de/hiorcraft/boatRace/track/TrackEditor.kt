@@ -25,6 +25,22 @@ object TrackEditor {
         return true
     }
 
+    fun deleteMap(id: String): Boolean {
+        val base = "tracks.$id"
+        if (!yml.contains(base)) return false
+
+        yml.set(base, null)
+        save()
+        return true
+    }
+
+    fun setLobby(loc: Location) {
+        yml.set("lobby", serialize(loc))
+        save()
+    }
+
+    fun getLobby(): Location? = parse(yml.getString("lobby"))
+
     fun setStartLine(id: String, a: Location, b: Location) {
         setLapLine(id, a, b)
     }
@@ -79,14 +95,22 @@ object TrackEditor {
     }
 
     private fun serialize(loc: Location): String =
-        "${loc.world.name},${loc.x},${loc.y},${loc.z}"
+        "${loc.world.name},${loc.x},${loc.y},${loc.z},${loc.yaw}"
 
     private fun parse(raw: String?): Location? {
         if (raw.isNullOrBlank()) return null
         val p = raw.split(",")
         if (p.size < 4) return null
         val world = plugin.server.getWorld(p[0]) ?: return null
-        return Location(world, p[1].toDoubleOrNull() ?: return null, p[2].toDoubleOrNull() ?: return null, p[3].toDoubleOrNull() ?: return null)
+        val yaw = p.getOrNull(4)?.toFloatOrNull() ?: 0f
+        return Location(
+            world,
+            p[1].toDoubleOrNull() ?: return null,
+            p[2].toDoubleOrNull() ?: return null,
+            p[3].toDoubleOrNull() ?: return null,
+            yaw,
+            0f
+        )
     }
 
     private fun syncLegacyLineKeysIfComplete(id: String) {

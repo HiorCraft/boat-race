@@ -13,9 +13,9 @@ import dev.jorel.commandapi.kotlindsl.commandTree
 import dev.jorel.commandapi.kotlindsl.integerArgument
 import dev.jorel.commandapi.kotlindsl.playerExecutor
 import dev.jorel.commandapi.kotlindsl.stringArgument
+import org.bukkit.GameMode
 
 fun startGameCommand() = commandTree("start") {
-    withAliases("gamestat", "startgame")
 
     stringArgument("track") {
         integerArgument("rounds") {
@@ -51,6 +51,7 @@ fun startGameCommand() = commandTree("start") {
                 // Teleportiere Spieler zu Startpositionen
                 for ((index, racePlayer) in RaceManager.activePlayers.withIndex()) {
                     val startPosition = track.startPositions.getOrElse(index) { track.startPositions.last() }
+                    racePlayer.player.gameMode = GameMode.SURVIVAL
                     racePlayer.player.teleport(startPosition)
 
                     // Entferne Queue-Scoreboard

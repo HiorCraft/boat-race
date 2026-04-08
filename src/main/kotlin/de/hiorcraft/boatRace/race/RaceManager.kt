@@ -1,8 +1,12 @@
 package de.hiorcraft.boatRace.race
 
+import de.hiorcraft.boatRace.plugin
+import de.hiorcraft.boatRace.util.BoatSpawner
 import de.hiorcraft.boatRace.util.FinishLineVisualizer
 import de.hiorcraft.boatRace.util.RaceScoreboard
+import de.hiorcraft.boatRace.race.RaceTimer
 import org.bukkit.Bukkit
+import org.bukkit.GameMode
 import org.bukkit.Location
 import org.bukkit.configuration.file.YamlConfiguration
 import org.bukkit.entity.Player
@@ -15,6 +19,7 @@ object RaceManager {
     var state = RaceState.WAITING
     var currentTrack: RaceTrack? = null
     var totalRounds = 3
+    var lobbyLocation: Location? = null
 
     fun isInQueue(player: Player): Boolean = queue.contains(player)
 
@@ -39,6 +44,30 @@ object RaceManager {
         player.sendMessage("§cDu hast die Queue verlassen.")
     }
 
+    fun leaveActiveRace(player: Player): Boolean {
+        val racePlayer = activePlayers.firstOrNull { it.player == player } ?: return false
+
+        RaceTimer.stop(player)
+        RaceScoreboard.removeBoard(player)
+
+        val vehicle = player.vehicle
+        if (vehicle != null) {
+            player.leaveVehicle()
+            vehicle.remove()
+        }
+
+        activePlayers.remove(racePlayer)
+
+        val lobby = lobbyLocation
+        if (lobby != null) {
+            player.gameMode = GameMode.ADVENTURE
+            player.teleport(lobby)
+        }
+
+
+        return true
+    }
+
     fun startRace(track: RaceTrack) {
         currentTrack = track
         state = RaceState.COUNTDOWN
@@ -54,19 +83,51 @@ object RaceManager {
     fun finishPlayer(racePlayer: RacePlayer) {
         racePlayer.player.sendMessage("§a§lDu hast das Rennen beendet!")
 
+        val vehicle = racePlayer.player.vehicle
+        if (vehicle != null) {
+            racePlayer.player.leaveVehicle()
+            vehicle.remove()
+        }
+
+        val spectator = currentTrack?.spectator
+        if (spectator != null) {
+            racePlayer.player.teleport(spectator)
+            racePlayer.player.gameMode = GameMode.SPECTATOR
+            racePlayer.player.sendActionBar("§7Du bist jetzt Zuschauer.")
+        }
+
         // Überprüfe ob alle Spieler fertig sind
         if (activePlayers.all { it.finished }) {
             endRace()
         }
     }
 
-    fun endRace() {
+    fun endRace(showPodium: Boolean = true) {
+        val players = activePlayers.map { it.player }
         FinishLineVisualizer.stopDisplayingLapLine()
         RaceScoreboard.stopAutoUpdate()
+        BoatSpawner.clearSpawnedBoats()
         for (racePlayer in activePlayers) {
             RaceScoreboard.removeBoard(racePlayer.player)
         }
-        finishRace()
+
+        if (showPodium) {
+            finishRace()
+        }
+
+        val lobby = lobbyLocation
+        if (!showPodium && lobby != null) {
+            Bukkit.getScheduler().runTaskLater(plugin, Runnable {
+                for (player in players) {
+                    if (player.isInsideVehicle) {
+                        player.leaveVehicle()
+                    }
+                    player.gameMode = GameMode.ADVENTURE
+                    player.teleport(lobby)
+                }
+            }, 0L)
+        }
+
         state = RaceState.WAITING
         activePlayers.clear()
         currentTrack = null
@@ -82,6 +143,7 @@ object TrackManager {
         if (!file.exists()) plugin.saveResource("tracks.yml", false)
 
         val yml = YamlConfiguration.loadConfiguration(file)
+        RaceManager.lobbyLocation = parseLoc(yml.getString("lobby"))
         tracks.clear()
         val section = yml.getConfigurationSection("tracks") ?: return
 
@@ -131,7 +193,8 @@ object TrackManager {
         val x = p[1].toDoubleOrNull() ?: return null
         val y = p[2].toDoubleOrNull() ?: return null
         val z = p[3].toDoubleOrNull() ?: return null
-        return Location(world, x, y, z)
+        val yaw = p.getOrNull(4)?.toFloatOrNull() ?: 0f
+        return Location(world, x, y, z, yaw, 0f)
     }
 
 }

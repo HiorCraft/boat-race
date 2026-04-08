@@ -21,14 +21,6 @@ object TrackEditingListener : Listener {
         player.sendMessage("§aKlicke Punkt A der Start/Ziel-Linie.")
     }
 
-    fun startEditingStartLine(player: Player, map: String) {
-        startEditingLapLine(player, map)
-    }
-
-    fun startEditingFinishLine(player: Player, map: String) {
-        startEditingLapLine(player, map)
-    }
-
     fun startEditingStartPos(player: Player, map: String) {
         editingStartPos[player] = map
         player.sendMessage("§aKlicke die Startposition.")
@@ -71,10 +63,13 @@ object TrackEditingListener : Listener {
         if (startPosMap != null) {
             if (e.action != Action.RIGHT_CLICK_BLOCK) return
             val block = e.clickedBlock ?: return
-            val loc = block.location
+            val loc = block.location.add(0.5, 0.0, 0.5).apply {
+                yaw = player.location.yaw
+                pitch = 0f
+            }
 
             TrackEditor.addStartPosition(startPosMap, loc)
-            player.sendMessage("§aStartposition hinzugefügt!")
+            player.sendMessage("§aStartposition mit Richtung hinzugefügt!")
             editingStartPos.remove(player)
             e.isCancelled = true
             return

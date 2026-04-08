@@ -31,6 +31,7 @@ object QueueScoreboard {
 
 object RaceScoreboard {
 
+    private const val LIVE_UPDATE_TICKS = 4L
     private val playerBoards = mutableMapOf<Player, org.bukkit.scoreboard.Scoreboard>()
     private var updateTask: BukkitTask? = null
 
@@ -64,7 +65,7 @@ object RaceScoreboard {
             for (racePlayer in RaceManager.activePlayers) {
                 updateBoard(racePlayer.player, RaceManager.totalRounds, placements)
             }
-        }, 0L, 10L)
+        }, 0L, LIVE_UPDATE_TICKS)
     }
 
     private fun updateBoard(player: Player, totalRounds: Int, placements: List<RacePlayer> = calculatePlacements()) {
@@ -85,6 +86,8 @@ object RaceScoreboard {
         lines += "§b§lUm dich"
 
         val myRank = placements.indexOfFirst { it.player == player } + 1
+        lines += if (myRank > 0) "§7Dein Platz: §e#$myRank" else "§7Dein Platz: §e-"
+
         if (myRank > 0) {
             val start = (myRank - 1).coerceAtLeast(1)
             val end = (myRank + 1).coerceAtMost(placements.size)
@@ -98,7 +101,8 @@ object RaceScoreboard {
         }
 
         lines += "  "
-        lines += "§7Runden: §e${viewerRacePlayer.currentRound}/$totalRounds"
+        lines += "§7Runde: §e${viewerRacePlayer.currentRound}/$totalRounds"
+        lines += "§7Meter: §e${currentLapMeters(viewerRacePlayer)}m"
 
         val total = lines.size
         lines.forEachIndexed { index, line ->
@@ -114,6 +118,13 @@ object RaceScoreboard {
     private fun uniqueEntry(text: String, index: Int): String {
         val code = "0123456789abcdef"[index % 16]
         return "$text§$code"
+    }
+
+    private fun currentLapMeters(racePlayer: RacePlayer): Int {
+        val track = RaceManager.currentTrack ?: return 0
+        val lapLength = track.lapLineA.distance(track.lapLineB)
+        val progress = progressOnTrack(racePlayer.player.location, track.lapLineA, track.lapLineB)
+        return (lapLength * progress).toInt()
     }
 
     fun removeBoard(player: Player) {

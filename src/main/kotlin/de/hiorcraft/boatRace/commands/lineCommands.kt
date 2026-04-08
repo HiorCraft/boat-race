@@ -1,6 +1,5 @@
 package de.hiorcraft.boatRace.commands
 
-import de.hiorcraft.boatRace.Listener.TrackEditingListener
 import de.hiorcraft.boatRace.plugin
 import de.hiorcraft.boatRace.race.TrackManager
 import de.hiorcraft.boatRace.track.TrackEditor
@@ -17,8 +16,8 @@ private val previewBoats = mutableListOf<Boat>()
 fun setLapLineCommand() = commandTree("setline") {
     withAliases("setlapline", "setlineclick")
 
-    stringArgument("map") {
-        stringArgument("point") {
+    stringArgument("point") {
+        stringArgument("map") {
             playerExecutor { player, args ->
                 val map = args["map"] as String
                 val point = (args["point"] as String).uppercase()
@@ -33,7 +32,7 @@ fun setLapLineCommand() = commandTree("setline") {
                     "B" -> {
                         val a = TrackEditor.getLapPointA(map)
                         if (a == null) {
-                            player.sendMessage("§cBitte zuerst Punkt A setzen: §e/setline $map A")
+                            player.sendMessage("§cBitte zuerst Punkt A setzen: §e/setline A $map")
                             return@playerExecutor
                         }
 
@@ -43,85 +42,13 @@ fun setLapLineCommand() = commandTree("setline") {
                         player.sendMessage("§aLinienpunkt B gesetzt. Start/Ziel-Linie aktiv! $dirText")
                     }
 
-                    else -> player.sendMessage("§cNutze §eA §coder §eB§c: /setline $map <A|B>")
+                    else -> player.sendMessage("§cNutze §eA §coder §eB§c: /setline <A|B> $map")
                 }
             }
         }
 
-        playerExecutor { player, args ->
-            val map = args["map"] as String
-            TrackEditingListener.startEditingLapLine(player, map)
-            player.sendMessage("§7Setze Punkt A und Punkt B. Diese Linie ist Start und Ziel.")
-        }
-    }
-}
-
-fun setStartLineCommand() = commandTree("setstartline") {
-    stringArgument("map") {
-        playerExecutor { player, args ->
-            val map = args["map"] as String
-            TrackEditingListener.startEditingLapLine(player, map)
-            player.sendMessage("§7Setze Punkt A und Punkt B (gemeinsame Start/Ziel-Linie).")
-        }
-    }
-}
-
-fun setFinishLineCommand() = commandTree("setfinishline") {
-    stringArgument("map") {
-        playerExecutor { player, args ->
-            val map = args["map"] as String
-            TrackEditingListener.startEditingLapLine(player, map)
-            player.sendMessage("§7Setze Punkt A und Punkt B (gemeinsame Start/Ziel-Linie).")
-        }
-    }
-}
-
-fun quickSetLapLineCommand() = commandTree("qsetline") {
-    withAliases("qsetlapline")
-
-    stringArgument("map") {
-        playerExecutor { player, args ->
-            val map = args["map"] as String
-            val pointA = player.location
-            val pointB = pointA.clone().add(player.eyeLocation.direction.multiply(2.0))
-
-            TrackEditor.setLapLine(map, pointA, pointB)
-
-            val dir = DirectionHelper.getDirection(pointA, pointB)
-            val dirText = DirectionHelper.getDirectionSymbol(dir)
-            player.sendMessage("§aStart/Ziel-Linie schnell gesetzt! $dirText")
-        }
-    }
-}
-
-fun quickSetStartLineCommand() = commandTree("qsetstartline") {
-    stringArgument("map") {
-        playerExecutor { player, args ->
-            val map = args["map"] as String
-            val pointA = player.location
-            val pointB = pointA.clone().add(player.eyeLocation.direction.multiply(2.0))
-
-            TrackEditor.setLapLine(map, pointA, pointB)
-
-            val dir = DirectionHelper.getDirection(pointA, pointB)
-            val dirText = DirectionHelper.getDirectionSymbol(dir)
-            player.sendMessage("§aStart/Ziel-Linie schnell gesetzt! $dirText")
-        }
-    }
-}
-
-fun quickSetFinishLineCommand() = commandTree("qsetfinishline") {
-    stringArgument("map") {
-        playerExecutor { player, args ->
-            val map = args["map"] as String
-            val pointA = player.location
-            val pointB = pointA.clone().add(player.eyeLocation.direction.multiply(2.0))
-
-            TrackEditor.setLapLine(map, pointA, pointB)
-
-            val dir = DirectionHelper.getDirection(pointA, pointB)
-            val dirText = DirectionHelper.getDirectionSymbol(dir)
-            player.sendMessage("§aStart/Ziel-Linie schnell gesetzt! $dirText")
+        playerExecutor { player, _ ->
+            player.sendMessage("§cNutze: §e/setline <A|B> <map>")
         }
     }
 }
@@ -160,6 +87,8 @@ private fun showPreview(player: org.bukkit.entity.Player, map: String, seconds: 
     for (pos in track.startPositions) {
         val world = pos.world ?: continue
         val spawn = pos.block.location.add(0.5, 0.0, 0.5)
+        spawn.yaw = pos.yaw
+        spawn.pitch = 0f
         val boat = world.spawnEntity(spawn, EntityType.OAK_BOAT) as Boat
         boat.isInvulnerable = true
         boat.setGravity(false)

@@ -42,9 +42,17 @@ object RaceCountdown {
 
 object BoatSpawner {
 
+    private val spawnedRaceBoats = mutableListOf<Boat>()
+
+    fun clearSpawnedBoats() {
+        spawnedRaceBoats.forEach { if (it.isValid) it.remove() }
+        spawnedRaceBoats.clear()
+    }
+
     fun spawnBoatsAtStartPositions() {
         val track = RaceManager.currentTrack ?: return
         if (track.startPositions.isEmpty()) return
+        clearSpawnedBoats()
 
         for ((index, racePlayer) in RaceManager.activePlayers.withIndex()) {
             val baseLoc = track.startPositions.getOrElse(index) { track.startPositions.last() }
@@ -59,6 +67,8 @@ object BoatSpawner {
             } else {
                 baseLoc.clone().add(0.5, 0.2, 0.5)
             }
+            spawnLoc.yaw = baseLoc.yaw
+            spawnLoc.pitch = 0f
             val player = racePlayer.player
 
             if (player.isInsideVehicle) {
@@ -68,6 +78,7 @@ object BoatSpawner {
             player.teleport(spawnLoc)
 
             val boat = world.spawnEntity(spawnLoc, EntityType.OAK_BOAT) as Boat
+            spawnedRaceBoats.add(boat)
             if (!boat.addPassenger(player)) {
                 player.teleport(boat.location)
                 boat.addPassenger(player)
