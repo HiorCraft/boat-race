@@ -8,6 +8,6 @@ fun calculatePlacements(): List<RacePlayer> {
 
     return RaceManager.activePlayers.sortedWith(
         compareByDescending<RacePlayer> { it.currentRound }
-            .thenByDescending { progressOnTrack(it.player.location, track.finishLineA, track.finishLineB) }
+            .thenByDescending { progressOnTrack(it.player.location, track.lapLineA, track.lapLineB) }
     )
 }

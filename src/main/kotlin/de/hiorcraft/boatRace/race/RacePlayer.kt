@@ -8,4 +8,6 @@ data class RacePlayer(
     var currentRound: Int = 1,
     var finished: Boolean = false,
     var totalTime: Double = 0.0,
+    var lapDetectionArmed: Boolean = false,
+    var lastCrossMillis: Long = 0L,
 )

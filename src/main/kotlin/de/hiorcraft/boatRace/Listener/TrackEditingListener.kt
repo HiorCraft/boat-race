@@ -1,6 +1,7 @@
 package de.hiorcraft.boatRace.Listener
 
 import de.hiorcraft.boatRace.track.TrackEditor
+import de.hiorcraft.boatRace.util.DirectionHelper
 import org.bukkit.entity.Player
 import org.bukkit.event.EventHandler
 import org.bukkit.event.Listener
@@ -9,23 +10,23 @@ import org.bukkit.event.player.PlayerInteractEvent
 
 object TrackEditingListener : Listener {
 
-    private val editingStartLine = mutableMapOf<Player, String>()
-    private val firstPointStart = mutableMapOf<Player, org.bukkit.Location>()
-
-    private val editingFinishLine = mutableMapOf<Player, String>()
-    private val firstPointFinish = mutableMapOf<Player, org.bukkit.Location>()
+    private val editingLapLine = mutableMapOf<Player, String>()
+    private val firstPointLap = mutableMapOf<Player, org.bukkit.Location>()
 
     private val editingStartPos = mutableMapOf<Player, String>()
     private val editingSpectator = mutableMapOf<Player, String>()
 
+    fun startEditingLapLine(player: Player, map: String) {
+        editingLapLine[player] = map
+        player.sendMessage("§aKlicke Punkt A der Start/Ziel-Linie.")
+    }
+
     fun startEditingStartLine(player: Player, map: String) {
-        editingStartLine[player] = map
-        player.sendMessage("§aKlicke den ersten Punkt der Startlinie.")
+        startEditingLapLine(player, map)
     }
 
     fun startEditingFinishLine(player: Player, map: String) {
-        editingFinishLine[player] = map
-        player.sendMessage("§aKlicke den ersten Punkt der Ziellinie.")
+        startEditingLapLine(player, map)
     }
 
     fun startEditingStartPos(player: Player, map: String) {
@@ -42,41 +43,24 @@ object TrackEditingListener : Listener {
     fun onClick(e: PlayerInteractEvent) {
         val player = e.player
 
-        // Startline editing
-        val startMap = editingStartLine[player]
-        if (startMap != null) {
+        // Lap line editing
+        val lapMap = editingLapLine[player]
+        if (lapMap != null) {
             if (e.action != Action.RIGHT_CLICK_BLOCK) return
             val block = e.clickedBlock ?: return
             val loc = block.location
 
-            if (!firstPointStart.containsKey(player)) {
-                firstPointStart[player] = loc
-                player.sendMessage("§aErster Punkt gesetzt! Jetzt zweiten klicken.")
+            if (!firstPointLap.containsKey(player)) {
+                firstPointLap[player] = loc
+                player.sendMessage("§aPunkt A gesetzt! Jetzt Punkt B klicken.")
             } else {
-                TrackEditor.setStartLine(startMap, firstPointStart[player]!!, loc)
-                player.sendMessage("§aStartlinie gespeichert!")
-                editingStartLine.remove(player)
-                firstPointStart.remove(player)
-            }
-            e.isCancelled = true
-            return
-        }
-
-        // Finishline editing
-        val finishMap = editingFinishLine[player]
-        if (finishMap != null) {
-            if (e.action != Action.RIGHT_CLICK_BLOCK) return
-            val block = e.clickedBlock ?: return
-            val loc = block.location
-
-            if (!firstPointFinish.containsKey(player)) {
-                firstPointFinish[player] = loc
-                player.sendMessage("§aErster Punkt gesetzt! Jetzt zweiten klicken.")
-            } else {
-                TrackEditor.setFinishLine(finishMap, firstPointFinish[player]!!, loc)
-                player.sendMessage("§aZiellinie gespeichert!")
-                editingFinishLine.remove(player)
-                firstPointFinish.remove(player)
+                val pointA = firstPointLap[player]!!
+                TrackEditor.setLapLine(lapMap, pointA, loc)
+                val direction = DirectionHelper.getDirection(pointA, loc)
+                val directionText = DirectionHelper.getDirectionSymbol(direction)
+                player.sendMessage("§aStart/Ziel-Linie gespeichert! $directionText")
+                editingLapLine.remove(player)
+                firstPointLap.remove(player)
             }
             e.isCancelled = true
             return
@@ -89,8 +73,8 @@ object TrackEditingListener : Listener {
             val block = e.clickedBlock ?: return
             val loc = block.location
 
-            TrackEditor.setStartPosition(startPosMap, loc)
-            player.sendMessage("§aStartposition gespeichert!")
+            TrackEditor.addStartPosition(startPosMap, loc)
+            player.sendMessage("§aStartposition hinzugefügt!")
             editingStartPos.remove(player)
             e.isCancelled = true
             return
@@ -103,6 +87,11 @@ object TrackEditingListener : Listener {
             val block = e.clickedBlock ?: return
             val loc = block.location
 
+            TrackEditor.setSpectator(spectatorMap, loc)
+            player.sendMessage("§aZuschauerposition gespeichert!")
+            editingSpectator.remove(player)
+            e.isCancelled = true
+            return
         }
     }
 }

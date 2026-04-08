@@ -19,8 +19,8 @@ fun createMapCommand() = commandTree("createMap") {
 
             player.sendMessage("§aMap §e$name §aerstellt!")
             player.sendMessage("§7Setze jetzt:")
-            player.sendMessage("§b/setstartline $name")
-            player.sendMessage("§b/setfinishline $name")
+            player.sendMessage("§b/setlapline $name")
+            player.sendMessage("§7oder schnell: §b/qsetlapline $name")
             player.sendMessage("§b/addstartpos $name")
             player.sendMessage("§b/setspectator $name")
         }

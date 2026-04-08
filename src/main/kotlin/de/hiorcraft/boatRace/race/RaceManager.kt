@@ -1,5 +1,7 @@
 package de.hiorcraft.boatRace.race
 
+import de.hiorcraft.boatRace.util.FinishLineVisualizer
+import de.hiorcraft.boatRace.util.RaceScoreboard
 import org.bukkit.Bukkit
 import org.bukkit.Location
 import org.bukkit.configuration.file.YamlConfiguration
@@ -39,7 +41,7 @@ object RaceManager {
 
     fun startRace(track: RaceTrack) {
         currentTrack = track
-        state = RaceState.RUNNING
+        state = RaceState.COUNTDOWN
         activePlayers.clear()
 
         for ((index, player) in queue.withIndex()) {
@@ -59,6 +61,11 @@ object RaceManager {
     }
 
     fun endRace() {
+        FinishLineVisualizer.stopDisplayingLapLine()
+        RaceScoreboard.stopAutoUpdate()
+        for (racePlayer in activePlayers) {
+            RaceScoreboard.removeBoard(racePlayer.player)
+        }
         finishRace()
         state = RaceState.WAITING
         activePlayers.clear()
@@ -75,25 +82,38 @@ object TrackManager {
         if (!file.exists()) plugin.saveResource("tracks.yml", false)
 
         val yml = YamlConfiguration.loadConfiguration(file)
+        tracks.clear()
         val section = yml.getConfigurationSection("tracks") ?: return
 
         for (id in section.getKeys(false)) {
             val base = "tracks.$id"
+            val lapA = yml.getString("$base.lapLine.a") ?: yml.getString("$base.startLine.a") ?: yml.getString("$base.finishLine.a")
+            val lapB = yml.getString("$base.lapLine.b") ?: yml.getString("$base.startLine.b") ?: yml.getString("$base.finishLine.b")
+            val spectator = yml.getString("$base.spectator")
 
-            val startA = parseLoc(yml.getString("$base.startLine.a")!!)
-            val startB = parseLoc(yml.getString("$base.startLine.b")!!)
-            val finishA = parseLoc(yml.getString("$base.finishLine.a")!!)
-            val finishB = parseLoc(yml.getString("$base.finishLine.b")!!)
-            val spectator = parseLoc(yml.getString("$base.spectator")!!)
+            // Skip incomplete tracks
+            if (lapA.isNullOrEmpty() || lapB.isNullOrEmpty() ||
+                spectator.isNullOrEmpty()) {
+                continue
+            }
 
-            val starts = yml.getStringList("$base.startPositions").map { parseLoc(it) }
+            val lapLineA = parseLoc(lapA)
+            val lapLineB = parseLoc(lapB)
+            val spectatorLoc = parseLoc(spectator)
+            if (lapLineA == null || lapLineB == null || spectatorLoc == null) {
+                plugin.logger.warning("Track '$id' wurde übersprungen: ungültige Pflicht-Location in tracks.yml")
+                continue
+            }
+
+            val starts = yml.getStringList("$base.startPositions").mapNotNull {
+                if (it.isNotEmpty()) parseLoc(it) else null
+            }
 
             tracks[id] = RaceTrack(
                 id,
-                startA, startB,
-                finishA, finishB,
+                lapLineA, lapLineB,
                 starts,
-                spectator
+                spectatorLoc
             )
         }
     }
@@ -102,10 +122,16 @@ object TrackManager {
 
     fun getAll() = tracks.values
 
-    private fun parseLoc(s: String): Location {
+    private fun parseLoc(s: String?): Location? {
+        if (s.isNullOrBlank()) return null
         val p = s.split(",")
-        val world = Bukkit.getWorld(p[0])!!
-        return Location(world, p[1].toDouble(), p[2].toDouble(), p[3].toDouble())
+        if (p.size < 4) return null
+
+        val world = Bukkit.getWorld(p[0]) ?: return null
+        val x = p[1].toDoubleOrNull() ?: return null
+        val y = p[2].toDoubleOrNull() ?: return null
+        val z = p[3].toDoubleOrNull() ?: return null
+        return Location(world, x, y, z)
     }
 
 }

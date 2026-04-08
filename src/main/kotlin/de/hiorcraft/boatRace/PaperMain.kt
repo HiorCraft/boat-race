@@ -7,8 +7,6 @@ import de.hiorcraft.boatRace.commands.addStartPosCommand
 import de.hiorcraft.boatRace.commands.createMapCommand
 import de.hiorcraft.boatRace.commands.joinCommand
 import de.hiorcraft.boatRace.commands.mapsCommand
-import de.hiorcraft.boatRace.commands.setFinishLineCommand
-import de.hiorcraft.boatRace.commands.setSpectatorCommand
 import de.hiorcraft.boatRace.commands.setStartLineCommand
 import de.hiorcraft.boatRace.commands.startGameCommand
 import de.hiorcraft.boatRace.race.TrackManager
@@ -37,18 +35,15 @@ class PaperMain : JavaPlugin() {
         logger.info("\n$LOGO")
         logger.info("Boat-Race is Starting!")
 
-        // Load tracks
         TrackManager.load(this)
 
         // Register commands
-        startGameCommand()
+        createMapCommand()
         joinCommand()
         setStartLineCommand()
-        setFinishLineCommand()
-        createMapCommand()
         mapsCommand()
         addStartPosCommand()
-        setSpectatorCommand()
+        startGameCommand()
 
         // Register listeners
         manager.registerEvents(FinishEventsListener(), this)
@@ -57,7 +52,6 @@ class PaperMain : JavaPlugin() {
 
         logger.info("Commands registered!")
         logger.info("Listeners registered!")
-
 
     }
 
