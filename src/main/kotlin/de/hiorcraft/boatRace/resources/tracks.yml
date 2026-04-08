@@ -1,0 +1,26 @@
+tracks:
+  ice1:
+    startLine:
+      a: world,0,100,0
+      b: world,10,100,0
+    finishLine:
+      a: world,0,100,50
+      b: world,10,100,50
+    startPositions:
+      - world,2,100,2
+      - world,4,100,2
+      - world,6,100,2
+    spectator: world,5,110,25
+
+  ice2:
+    startLine:
+      a: world,100,80,0
+      b: world,110,80,0
+    finishLine:
+      a: world,100,80,40
+      b: world,110,80,40
+    startPositions:
+      - world,102,80,2
+      - world,104,80,2
+      - world,106,80,2
+    spectator: world,105,90,20
