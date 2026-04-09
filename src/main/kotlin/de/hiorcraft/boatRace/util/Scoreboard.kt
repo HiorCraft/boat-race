@@ -72,6 +72,7 @@ object RaceScoreboard {
         val board = playerBoards[player] ?: return
         val obj = board.getObjective("race") ?: return
         val viewerRacePlayer = RaceManager.activePlayers.firstOrNull { it.player == player } ?: return
+        val track = RaceManager.currentTrack
 
         board.entries.forEach { board.resetScores(it) }
 
@@ -103,6 +104,13 @@ object RaceScoreboard {
         lines += "  "
         lines += "§7Runde: §e${viewerRacePlayer.currentRound}/$totalRounds"
         lines += "§7Meter: §e${currentLapMeters(viewerRacePlayer)}m"
+
+        // Checkpoint-Zeile nur anzeigen wenn die Map Checkpoints hat
+        if (track != null && track.checkpoints.isNotEmpty()) {
+            val passed = viewerRacePlayer.currentCheckpoint.coerceAtMost(track.checkpoints.size)
+            val total  = track.checkpoints.size
+            lines += "§7CP: §e$passed§7/§e$total"
+        }
 
         val total = lines.size
         lines.forEachIndexed { index, line ->

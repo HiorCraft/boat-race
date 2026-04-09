@@ -174,11 +174,16 @@ object TrackManager {
                 if (it.isNotEmpty()) parseLoc(it) else null
             }
 
+            val checkpoints = yml.getStringList("$base.checkpoints").mapNotNull {
+                if (it.isNotEmpty()) parseLoc(it) else null
+            }
+
             tracks[id] = RaceTrack(
                 id,
                 lapLineA, lapLineB,
                 starts,
-                spectatorLoc
+                spectatorLoc,
+                checkpoints
             )
         }
     }

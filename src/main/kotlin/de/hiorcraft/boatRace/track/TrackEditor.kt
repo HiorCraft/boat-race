@@ -24,6 +24,7 @@ object TrackEditor {
         yml.set("$base.lapLine.a", "")
         yml.set("$base.lapLine.b", "")
         yml.set("$base.startPositions", mutableListOf<String>())
+        yml.set("$base.checkpoints", mutableListOf<String>())
         yml.set("$base.spectator", "")
 
         save()
@@ -107,6 +108,39 @@ object TrackEditor {
         yml.set("tracks.$id.spectator", serialize(loc))
         save()
     }
+
+    // ── Checkpoints ───────────────────────────────────────────────────────────
+
+    /**
+     * Fügt einen neuen Checkpoint am Ende der Checkpoint-Liste hinzu.
+     * Checkpoints müssen in der Fahrrichtung der Strecke gesetzt werden.
+     */
+    fun addCheckpoint(id: String, loc: Location) {
+        val list = yml.getStringList("tracks.$id.checkpoints").toMutableList()
+        list.add(serialize(loc))
+        yml.set("tracks.$id.checkpoints", list)
+        save()
+    }
+
+    /** Entfernt den zuletzt gesetzten Checkpoint (Undo). */
+    fun removeLastCheckpoint(id: String): Boolean {
+        val list = yml.getStringList("tracks.$id.checkpoints").toMutableList()
+        if (list.isEmpty()) return false
+        list.removeAt(list.lastIndex)
+        yml.set("tracks.$id.checkpoints", list)
+        save()
+        return true
+    }
+
+    /** Löscht alle Checkpoints einer Map. */
+    fun clearCheckpoints(id: String) {
+        yml.set("tracks.$id.checkpoints", mutableListOf<String>())
+        save()
+    }
+
+    /** Gibt alle gespeicherten Checkpoints einer Map zurück. */
+    fun getCheckpoints(id: String): List<Location> =
+        yml.getStringList("tracks.$id.checkpoints").mapNotNull { if (it.isNotEmpty()) parse(it) else null }
 
     private fun serialize(loc: Location): String =
         "${loc.world.name},${loc.x},${loc.y},${loc.z},${loc.yaw}"

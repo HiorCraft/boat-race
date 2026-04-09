@@ -9,7 +9,9 @@ data class RaceTrack(
     val lapLineA: Location,
     val lapLineB: Location,
     val startPositions: List<Location>,
-    val spectator: Location
+    val spectator: Location,
+    /** Zwischenpunkte entlang der Strecke, in der richtigen Reihenfolge (optionale Checkpoint-Kugeln). */
+    val checkpoints: List<Location> = emptyList()
 ) {
     val startLineA: Location get() = lapLineA
     val startLineB: Location get() = lapLineB

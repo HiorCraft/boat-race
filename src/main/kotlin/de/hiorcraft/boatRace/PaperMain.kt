@@ -17,9 +17,15 @@ import de.hiorcraft.boatRace.commands.lobbyCommand
 import de.hiorcraft.boatRace.commands.setLapLineCommand
 import de.hiorcraft.boatRace.commands.setLobbyCommand
 import de.hiorcraft.boatRace.commands.setPodestCommand
-import de.hiorcraft.boatRace.commands.setSpectatorCommand
-import de.hiorcraft.boatRace.commands.stopGameCommand
+import de.hiorcraft.boatRace.commands.boatRaceCommand
+import de.hiorcraft.boatRace.commands.validateTrackCommand
 import de.hiorcraft.boatRace.commands.startGameCommand
+import de.hiorcraft.boatRace.commands.stopGameCommand
+import de.hiorcraft.boatRace.commands.setSpectatorCommand
+import de.hiorcraft.boatRace.commands.addCheckpointCommand
+import de.hiorcraft.boatRace.commands.removeCheckpointCommand
+import de.hiorcraft.boatRace.commands.clearCheckpointsCommand
+import de.hiorcraft.boatRace.commands.listCheckpointsCommand
 import de.hiorcraft.boatRace.commands.validateTrackCommand
 import de.hiorcraft.boatRace.race.TrackManager
 
@@ -67,6 +73,10 @@ class PaperMain : JavaPlugin() {
         joinCommand()
         leaveCommand()
         setSpectatorCommand()
+        addCheckpointCommand()
+        removeCheckpointCommand()
+        clearCheckpointsCommand()
+        listCheckpointsCommand()
 
 
         // Register listeners

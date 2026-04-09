@@ -17,6 +17,12 @@ object TrackEditingListener : Listener {
     private val editingStartPos = mutableMapOf<Player, String>()
     private val editingSpectator = mutableMapOf<Player, String>()
 
+    /**
+     * Spieler die gerade Checkpoints per Rechtsklick setzen.
+     * Der Modus bleibt aktiv bis der Spieler Links-klickt oder /addcheckpoint stop ausführt.
+     */
+    private val editingCheckpoint = mutableMapOf<Player, String>()
+
     fun startEditingLapLine(player: Player, map: String) {
         editingLapLine[player] = map
         player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.SUCCESS}Linien-Editor aktiv fuer §e$map${ChatConfig.SUCCESS}.")
@@ -34,6 +40,20 @@ object TrackEditingListener : Listener {
         editingSpectator[player] = map
         player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.SUCCESS}Zuschauerpunkt-Editor aktiv fuer §e$map${ChatConfig.SUCCESS}.")
         player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.INFO}Rechtsklick auf die Zuschauerposition.")
+    }
+
+    fun startEditingCheckpoint(player: Player, map: String) {
+        editingCheckpoint[player] = map
+        val existingCount = de.hiorcraft.boatRace.track.TrackEditor.getCheckpoints(map).size
+        player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.SUCCESS}Checkpoint-Editor aktiv für §e$map§a. (Bereits §e$existingCount§a gesetzt)")
+        player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.INFO}§aRechtsklick §7auf Block = Checkpoint setzen")
+        player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.INFO}§cLinksklick §7auf Block = Modus beenden")
+    }
+
+    fun stopEditingCheckpoint(player: Player) {
+        val map = editingCheckpoint.remove(player) ?: return
+        val count = de.hiorcraft.boatRace.track.TrackEditor.getCheckpoints(map).size
+        player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.SUCCESS}Checkpoint-Editor beendet. §e$count§a Checkpoint(s) gespeichert für §e$map§a.")
     }
 
     @EventHandler
@@ -95,6 +115,29 @@ object TrackEditingListener : Listener {
             player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.SUCCESS}Zuschauerposition gespeichert.")
             player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.INFO}Map: §e$spectatorMap")
             editingSpectator.remove(player)
+            e.isCancelled = true
+            return
+        }
+
+        // ── Checkpoint editing ────────────────────────────────────────────────
+        val checkpointMap = editingCheckpoint[player]
+        if (checkpointMap != null) {
+            val block = e.clickedBlock ?: return
+
+            // Linksklick = Modus beenden
+            if (e.action == Action.LEFT_CLICK_BLOCK) {
+                stopEditingCheckpoint(player)
+                e.isCancelled = true
+                return
+            }
+
+            if (e.action != Action.RIGHT_CLICK_BLOCK) return
+
+            val loc = block.location.add(0.5, 0.0, 0.5)
+            TrackEditor.addCheckpoint(checkpointMap, loc)
+
+            val count = TrackEditor.getCheckpoints(checkpointMap).size
+            player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.SUCCESS}Checkpoint §e#$count §ahinzugefügt! §7(Rechtsklick = weiterer CP, Linksklick = fertig)")
             e.isCancelled = true
             return
         }

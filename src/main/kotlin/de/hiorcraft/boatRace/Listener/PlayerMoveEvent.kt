@@ -34,6 +34,7 @@ class PlayerMoveListener: Listener {
 
             rp.lastCrossMillis = now
             rp.lapDetectionArmed = false
+            rp.currentCheckpoint = 0   // Checkpoint-Fortschritt für neue Runde zurücksetzen
             rp.currentRound++
 
             if (rp.currentRound > RaceManager.totalRounds) {
@@ -42,6 +43,23 @@ class PlayerMoveListener: Listener {
                 RaceManager.finishPlayer(rp)
             }
         }
+
+        // ── Checkpoint-Erkennung ──────────────────────────────────────────────
+        val checkpoints = track.checkpoints
+        if (checkpoints.isNotEmpty() && rp.currentCheckpoint < checkpoints.size) {
+            val nextCp = checkpoints[rp.currentCheckpoint]
+            if (to.world == nextCp.world && to.distance(nextCp) <= CHECKPOINT_RADIUS) {
+                rp.currentCheckpoint++
+                val passed = rp.currentCheckpoint
+                val total  = checkpoints.size
+                rp.player.sendActionBar("§a✔ Checkpoint §e$passed§a/§e$total §apasiert!")
+            }
+        }
+    }
+
+    companion object {
+        /** Radius in Blöcken, innerhalb dem ein Checkpoint als passiert gilt. */
+        const val CHECKPOINT_RADIUS = 4.0
     }
 
     private fun crossedLapLine(from: Location, to: Location, a: Location, b: Location): Boolean {
