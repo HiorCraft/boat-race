@@ -1,7 +1,6 @@
 package de.hiorcraft.boatRace.Listener
 
 import de.hiorcraft.boatRace.race.RaceManager
-import de.hiorcraft.boatRace.race.RacePlayer
 import de.hiorcraft.boatRace.race.RaceState
 import de.hiorcraft.boatRace.race.RaceTimer
 import org.bukkit.event.EventHandler
@@ -19,8 +18,9 @@ class PlayerMoveListener: Listener {
 
         val track = RaceManager.currentTrack ?: return
         val rp = RaceManager.activePlayers.firstOrNull { it.player == e.player } ?: return
+        if (rp.finished) return
         val from = e.from
-        val to = e.to ?: return
+        val to = e.to
 
         if (from.world != to.world || to.world != track.lapLineA.world) return
 
@@ -28,9 +28,27 @@ class PlayerMoveListener: Listener {
             rp.lapDetectionArmed = true
         }
 
-        if (rp.lapDetectionArmed && crossedLapLine(from, to, track.lapLineA, track.lapLineB)) {
+        val crossDirection = if (rp.lapDetectionArmed) {
+            lapCrossDirection(from, to, track.lapLineA, track.lapLineB)
+        } else {
+            null
+        }
+
+        if (crossDirection != null) {
             val now = System.currentTimeMillis()
             if (now - rp.lastCrossMillis < 1500L) return
+
+            // Eine Runde gilt nur, wenn alle Checkpoints dieser Runde passiert wurden.
+            if (track.checkpoints.isNotEmpty() && rp.currentCheckpoint < track.checkpoints.size) {
+                return
+            }
+
+            if (rp.lapDirectionSign == null) {
+                rp.lapDirectionSign = crossDirection
+            }
+            if (rp.lapDirectionSign != crossDirection) {
+                return
+            }
 
             rp.lastCrossMillis = now
             rp.lapDetectionArmed = false
@@ -62,17 +80,19 @@ class PlayerMoveListener: Listener {
         const val CHECKPOINT_RADIUS = 4.0
     }
 
-    private fun crossedLapLine(from: Location, to: Location, a: Location, b: Location): Boolean {
+    private fun lapCrossDirection(from: Location, to: Location, a: Location, b: Location): Int? {
         val fromSide = signedSide(from, a, b)
         val toSide = signedSide(to, a, b)
 
-        if (fromSide == 0.0 || toSide == 0.0) return false
-        if (fromSide * toSide >= 0.0) return false
+        if (fromSide == 0.0 || toSide == 0.0) return null
+        if (fromSide * toSide >= 0.0) return null
 
         val midX = (from.x + to.x) / 2.0
         val midZ = (from.z + to.z) / 2.0
         val projection = projectionFactorXZ(midX, midZ, a, b)
-        return projection in -0.15..1.15
+        if (projection !in -0.15..1.15) return null
+
+        return if (fromSide < 0.0 && toSide > 0.0) 1 else -1
     }
 
     private fun signedSide(point: Location, a: Location, b: Location): Double {

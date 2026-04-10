@@ -19,8 +19,12 @@ object RaceManager {
     var state = RaceState.WAITING
     var currentTrack: RaceTrack? = null
     var totalRounds = 3
+    private const val DEFAULT_MAX_PLAYERS = 8
     var lobbyLocation: Location? = null
     var podiumBaseLocation: Location? = null
+
+    val maxPlayers: Int
+        get() = plugin.config.getInt("queue.maxPlayers", DEFAULT_MAX_PLAYERS).coerceAtLeast(1)
 
     fun isInQueue(player: Player): Boolean = queue.contains(player)
 
@@ -35,8 +39,13 @@ object RaceManager {
             return false
         }
 
+        if (queue.size >= maxPlayers) {
+            player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.ERROR}Die Queue ist voll (${queue.size}/$maxPlayers).")
+            return false
+        }
+
         queue.add(player)
-        player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.SUCCESS}Du bist der Queue beigetreten! (${queue.size} Spieler)")
+        player.sendMessage("${ChatConfig.INFO_PREFIX}${ChatConfig.SUCCESS}Du bist der Queue beigetreten! (${queue.size}/$maxPlayers)")
         return true
     }
 

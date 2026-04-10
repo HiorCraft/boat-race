@@ -4,6 +4,10 @@ lobbyCountdown: 10
 mapCountdown: 10
 startCountdown: 3
 
+# Maximale Anzahl Spieler in der Queue (und damit pro Rennen)
+queue:
+  maxPlayers: 8
+
 # Globale Positionen (Format: world,x,y,z,yaw)
 # Setzen im Spiel mit: /setlobby und /setpodest
 locations:

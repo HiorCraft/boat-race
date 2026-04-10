@@ -12,4 +12,5 @@ data class RacePlayer(
     var totalTime: Double = 0.0,
     var lapDetectionArmed: Boolean = false,
     var lastCrossMillis: Long = 0L,
+    var lapDirectionSign: Int? = null,
 )
